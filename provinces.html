@@ -1,0 +1,55 @@
+<h3>Provinces API Example</h3>
+
+<p>Provinces<br>
+  <select id="provinces">
+  </select>
+</p>
+<p>Municipalities<br>
+  <select id="municipalities">
+  </select>
+</p>
+<p>Barangays<br>
+  <select id="barangays">
+  </select>
+</p>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="http://opendataph.scoollabs.com/client.js"></script>
+<script>
+  var url = 'http://opendataph.scoollabs.com';
+  $(function() {
+    OpenDataPH.getProvinces(url, function(municipalities) {
+      // console.log(municipalities);
+      $('#provinces').empty();
+      $(municipalities).each(function(i, p) {
+        $('#provinces').append('\
+          <option value="' + p.province + '">' + p.province + '</option>');
+      });
+    }, function() {});
+
+    $('#provinces').change(function() {
+      var province = $(this).val();
+      var district = '';
+      OpenDataPH.getMunicipalities(url, province, district, function(municipalities) {
+        // console.log(municipalities);
+        $('#municipalities').empty();
+        $(municipalities).each(function(i, m) {
+          $('#municipalities').append('\
+            <option value="' + m.municipality + '">' + m.municipality + '</option>');
+        });
+      }, function() {});
+    });
+
+    $('#municipalities').change(function() {
+      var municipality = $(this).val();
+      OpenDataPH.getBarangays(url, municipality, function(barangays) {
+        // console.log(barangays);
+        $('#barangays').empty();
+        $(barangays).each(function(i, b) {
+          $('#barangays').append('\
+            <option value="' + b.barangay + '">' + b.barangay + '</option>');
+        });
+      }, function() {});
+    });
+  });
+</script>
