@@ -1,0 +1,149 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<h1>OpenDataPH Examples</h1>
+<h3>Basic Salary Calculator (PH)</h3>
+<p>Basic pay<br>
+  <input type="text" id="pay" value="20000">
+</p>
+<p>
+  <button id="compute">Compute</button>
+</p>
+
+<table>
+  <tr>
+    <td>Basic pay:</td>
+    <td><strong id="basic-pay">0.00</strong></td>
+  </tr>
+  <tr>
+    <td>Withholding tax:</td>
+    <td><strong id="tax">0.00</strong></td>
+  </tr>
+  <tr>
+    <td>SSS contribution:</td>
+    <td><strong id="sss">0.00</strong></td>
+  </tr>
+  <tr>
+    <td>PhilHealth contribution:</td>
+    <td><strong id="philhealth">0.00</strong></td>
+  </tr>
+  <tr>
+    <td>PagIBIG contribution:</td>
+    <td><strong id="pagibig">0.00</strong></td>
+  </tr>
+</table>
+
+<h4>Reference</h4>
+<ul>
+  <li><a href="http://opendataph.scoollabs.com/api/income_tax_tables">/api/income_tax_tables</a></li>
+  <li><a href="http://opendataph.scoollabs.com/api/sss_premiums">/api/sss_premiums</a></li>
+  <li><a href="http://opendataph.scoollabs.com/api/philhealth_premiums">/api/philhealth_premiums</a></li>
+  <li><a href="http://opendataph.scoollabs.com/api/pagibig_premiums">/api/pagibig_premiums</a></li>
+</ul>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="http://opendataph.scoollabs.com/public/assets/js/opendataph.js"></script>
+<script>var url = 'http://opendataph.scoollabs.com';</script>
+<!--<script src="http://localhost:8888/red/opendataph/public/assets/js/opendataph.js"></script>
+<script>var url = 'http://localhost:8888/red/opendataph';</script>-->
+<script>
+    $(function () {
+      var c = new SalaryCalculator();
+      var year = 2019;
+      $.ajaxSetup({async: false}); // This is needed so it won't get the data asynchronously
+
+      $.getJSON(url + '/api/income_tax_tables?year=' + year, function (data) {
+        c.setIncomeTaxTable(data);
+      });
+      $.getJSON(url + '/api/sss_premiums?year=' + year, function (data) {
+        c.setSSSPremiums(data);
+      });
+      $.getJSON(url + '/api/philhealth_premiums?year=' + year, function (data) {
+        c.setPhilHealthPremiums(data);
+      });
+      $.getJSON(url + '/api/pagibig_premiums?year=' + year, function (data) {
+        c.setPagIBIGPremiums(data);
+      });
+
+      $('#compute').click(function () {
+        var basicPay = $('#pay').val();
+        var data = c.calculate(basicPay);
+        console.log(data);
+        $('#basic-pay').text(data.basicPay);
+        $('#tax').text(data.withHoldingTax);
+        $('#sss').text(data.sssContribution);
+        $('#philhealth').text(data.philHealthContribution);
+        $('#pagibig').text(data.pagIBIGContribution);
+      });
+    });
+
+    class SalaryCalculator {
+      setIncomeTaxTable(incomeTaxTable) {
+        this.incomeTaxTable = incomeTaxTable;
+      }
+      setSSSPremiums(sssPremiums) {
+        this.sssPremiums = sssPremiums;
+      }
+      setPhilHealthPremiums(philHealthPremiums) {
+        this.philHealthPremiums = philHealthPremiums;
+      }
+      setPagIBIGPremiums(pagIBIGPremiums) {
+        this.pagIBIGPremiums = pagIBIGPremiums;
+      }
+      getIncomeTax(monthlyPay) {
+        var yearlyPay = monthlyPay * 12;
+        var basicAmount = 0;
+        $(this.incomeTaxTable).each(function (i, e) {
+          if (yearlyPay >= e.range_from && yearlyPay <= e.range_to) {
+            basicAmount = e.basic_amount;
+          }
+        });
+        return basicAmount;
+      }
+      getSSSPremium(basicPay) {
+        var sssPremium = 0;
+        $(this.sssPremiums).each(function (i, e) {
+          if (basicPay >= e.range_from && basicPay <= e.range_to) {
+            sssPremium = e.ee;
+          }
+        });
+        return sssPremium;
+      }
+      getPhilHealthPremium(basicPay) {
+        var philHealthPremium = 0;
+        $(this.philHealthPremiums).each(function (i, e) {
+          if (basicPay >= e.range_from && basicPay <= e.range_to) {
+            philHealthPremium = e.rate;
+          }
+        });
+        return philHealthPremium;
+      }
+      getPagIBIGPremium(basicPay) {
+        var pagIBIGPremium = 0;
+        $(this.pagIBIGPremiums).each(function (i, e) {
+          if (basicPay >= e.range_from && basicPay <= e.range_to) {
+            pagIBIGPremium = e.ee + e.er;
+          }
+        });
+        return pagIBIGPremium;
+      }
+      calculate(basicPay) {
+        var withHoldingTax = basicPay * (this.getIncomeTax(basicPay) / 100);
+        var sssContribution = this.getSSSPremium(basicPay);
+        var philHealthContribution = basicPay * (this.getPhilHealthPremium(basicPay) / 100);
+        var pagIBIGContribution = basicPay * (this.getPagIBIGPremium(basicPay) / 100);
+
+        return {
+          basicPay: basicPay,
+          withHoldingTax: withHoldingTax,
+          sssContribution: sssContribution,
+          philHealthContribution: philHealthContribution,
+          pagIBIGContribution: pagIBIGContribution,
+        };
+      }
+    }
+</script>
+
+<br><br><br>
+<hr>
+Powered by<br>
+<img src="img/opendata-small.png">
