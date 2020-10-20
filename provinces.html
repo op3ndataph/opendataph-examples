@@ -1,14 +1,14 @@
 <h3>Provinces API Example</h3>
 
-<p>Provinces<br>
+<p>Province<br>
   <select id="provinces">
   </select>
 </p>
-<p>Municipalities<br>
+<p>Municipality<br>
   <select id="municipalities">
   </select>
 </p>
-<p>Barangays<br>
+<p>Barangay<br>
   <select id="barangays">
   </select>
 </p>
@@ -18,10 +18,10 @@
 <script>
   var url = 'http://opendataph.scoollabs.com';
   $(function() {
-    OpenDataPH.getProvinces(url, function(municipalities) {
-      // console.log(municipalities);
+    OpenDataPH.getProvinces(url, function(provinces) {
+      // console.log(provinces);
       $('#provinces').empty();
-      $(municipalities).each(function(i, p) {
+      $(provinces).each(function(i, p) {
         $('#provinces').append('\
           <option value="' + p.province + '">' + p.province + '</option>');
       });
@@ -29,7 +29,7 @@
 
     $('#provinces').change(function() {
       var province = $(this).val();
-      var district = '';
+      var district = ''; // HACK: This is needed for now since API expects a district
       OpenDataPH.getMunicipalities(url, province, district, function(municipalities) {
         // console.log(municipalities);
         $('#municipalities').empty();
