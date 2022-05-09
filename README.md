@@ -1,4 +1,4 @@
-# opendataph-examples
+# OpenDataPH Examples
 
 Here we upload the example usage of the OpenDataPH API.
 
